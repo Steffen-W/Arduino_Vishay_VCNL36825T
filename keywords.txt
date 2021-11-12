@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For Vishay_VCNL36825T
+####################################### 
+# Class
+#######################################
+
+Vishay_VCNL36825T	KEYWORD1
+VCNL36825T	KEYWORD1
+vcnl36825t	KEYWORD1
+
+#######################################
+# Methods and Functions 
+#######################################	
+
+begin	KEYWORD2
+end	KEYWORD2
+
+read_PS	KEYWORD2
+PS_ST	KEYWORD2
+PS_INT	KEYWORD2
+PS_INT_with_threshold	KEYWORD2
+read_INT_FLAG	KEYWORD2
+read_INT_FLAG	KEYWORD2
+set_PS_I_VCSEL	KEYWORD2
+get_PS_I_VCSEL	KEYWORD2
+read_PS_with_AC	KEYWORD2
+
+#######################################
+# Constants
+#######################################
