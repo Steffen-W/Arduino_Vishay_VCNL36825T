@@ -27,8 +27,8 @@ class VCNL36825TClass {
 
     int begin();
     void end();
-    boolean read(uint8_t reg, volatile uint16_t *data);
-    boolean write( uint8_t reg, uint16_t data);
+    boolean readWord(uint8_t reg, volatile uint16_t *data);
+    boolean writeWord( uint8_t reg, uint16_t data);
     virtual boolean read_PS(uint16_t *ps);
     boolean PS_ST(boolean stop);
     boolean PS_INT(uint16_t prx_int);

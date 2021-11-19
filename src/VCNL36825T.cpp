@@ -130,8 +130,8 @@ VCNL36825TClass::VCNL36825TClass(TwoWire& wire) :
 VCNL36825TClass::~VCNL36825TClass(void)
 {
   PS_INT(PS_INT_DISABLE);
-  write(VCNL36825T_REG_PS_CONF3, 0x0008);
-  write(VCNL36825T_REG_PS_CONF1, 0x0201);
+  writeWord(VCNL36825T_REG_PS_CONF3, 0x0008);
+  writeWord(VCNL36825T_REG_PS_CONF1, 0x0201);
 }
 
 int VCNL36825TClass::begin(void)
@@ -140,38 +140,41 @@ int VCNL36825TClass::begin(void)
   slaveAddress = VCNL36825T_ADDRESS;
 
   // Prevent I2C bus lockup
-  write(VCNL36825T_REG_PS_THDL, 0x0);
-  write(VCNL36825T_REG_PS_THDL, 0x0);
+  writeWord(VCNL36825T_REG_PS_THDL, 0x0);
+  writeWord(VCNL36825T_REG_PS_THDL, 0x0);
   
   uint16_t id;
-  if (!read(VCNL36825T_REG_ID, &id) || (id & 0xFF) != VCNL36825T_WHO_AM_I)
+  if (!readWord(VCNL36825T_REG_ID, &id) || (id & 0xFF) != VCNL36825T_WHO_AM_I)
 	  return 0;
 
-  // Power on
-  // (1). PS_ST = 1
-  write(VCNL36825T_REG_PS_CONF1, 0x0201);
-  write(VCNL36825T_REG_PS_CONF3, VCNL36825T_PS_ST);
-  // (2). PS_ON = 1, PS_CAL = 1
-  write(VCNL36825T_REG_PS_CONF1, 0x0201 | VCNL36825T_PS_ON | VCNL36825T_PS_CAL);
-  // (3). PS_ST = 0
-  write(VCNL36825T_REG_PS_CONF3, 0x0000);
-  
-  // Initialization
-  write(VCNL36825T_REG_PS_CONF1, VCNL36825T_DEFAULT_PS_CONF1);
-  write(VCNL36825T_REG_PS_CONF2, VCNL36825T_DEFAULT_PS_CONF2);
-  write(VCNL36825T_REG_PS_CONF3, VCNL36825T_DEFAULT_PS_CONF3);
-  write(VCNL36825T_REG_PS_THDL, VCNL36825T_DEFAULT_PS_THDL);
-  write(VCNL36825T_REG_PS_THDH, VCNL36825T_DEFAULT_PS_THDH);
-  write(VCNL36825T_REG_PS_CANC, VCNL36825T_DEFAULT_PS_CANC);
-  write(VCNL36825T_REG_PS_CONF4, VCNL36825T_DEFAULT_PS_CONF4);
-  set_PS_I_VCSEL(PS_I_VCSEL_10mA);
+  // Power On sequences
+  if (// (1). PS_ST = 1
+      !writeWord(VCNL36825T_REG_PS_CONF1, 0x0201) ||
+      !writeWord(VCNL36825T_REG_PS_CONF3, VCNL36825T_PS_ST) ||
+      // (2). PS_ON = 1, PS_CAL = 1
+      !writeWord(VCNL36825T_REG_PS_CONF1, 0x0201 | VCNL36825T_PS_ON | VCNL36825T_PS_CAL) ||
+      // (3). PS_ST = 0
+      !writeWord(VCNL36825T_REG_PS_CONF3, 0x0000))
+    return 0;
 
-  delay(10);
-  
-  return 1;
+  // Initialization
+  if (writeWord(VCNL36825T_REG_PS_CONF1, VCNL36825T_DEFAULT_PS_CONF1) &&
+      writeWord(VCNL36825T_REG_PS_CONF2, VCNL36825T_DEFAULT_PS_CONF2) &&
+      writeWord(VCNL36825T_REG_PS_CONF3, VCNL36825T_DEFAULT_PS_CONF3) &&
+      writeWord(VCNL36825T_REG_PS_THDL, VCNL36825T_DEFAULT_PS_THDL) &&
+      writeWord(VCNL36825T_REG_PS_THDH, VCNL36825T_DEFAULT_PS_THDH) &&
+      writeWord(VCNL36825T_REG_PS_CANC, VCNL36825T_DEFAULT_PS_CANC) &&
+      writeWord(VCNL36825T_REG_PS_CONF4, VCNL36825T_DEFAULT_PS_CONF4) &&
+      set_PS_I_VCSEL(PS_I_VCSEL_10mA))
+  {
+    delay(10);
+    return 1; 
+  }
+ 
+  return 0;
 }
 
-boolean VCNL36825TClass::read(uint8_t reg, volatile uint16_t *data)
+boolean VCNL36825TClass::readWord(uint8_t reg, volatile uint16_t *data)
 {
   uint8_t   wd;
 
@@ -197,7 +200,7 @@ read_error:
   return false;
 }
 
-boolean VCNL36825TClass::write(uint8_t reg, uint16_t data)
+boolean VCNL36825TClass::writeWord(uint8_t reg, uint16_t data)
 {
   boolean status = false;
   
@@ -215,16 +218,16 @@ boolean VCNL36825TClass::bitsUpdate(uint8_t reg, uint16_t mask, uint16_t update)
 {
   uint16_t value;
   
-  if (!read(reg, &value))
+  if (!readWord(reg, &value))
     return false;
   value &= mask;
   value |= update;
-  return write(reg, value);
+  return writeWord(reg, value);
 }
 
 boolean VCNL36825TClass::read_PS(uint16_t *ps)
 {
-  return read(VCNL36825T_REG_PS_DATA, ps);
+  return readWord(VCNL36825T_REG_PS_DATA, ps);
 }
 
 boolean VCNL36825TClass::PS_ST(boolean stop)
@@ -246,8 +249,8 @@ boolean VCNL36825TClass::PS_INT(uint16_t ps_int)
 boolean VCNL36825TClass::PS_INT_with_threshold(uint16_t thdl, uint16_t thdh)
 {
   if (PS_INT(PS_INT_DISABLE) &&
-      write(VCNL36825T_REG_PS_THDL, thdl) &&
-      write(VCNL36825T_REG_PS_THDH, thdh) &&
+      writeWord(VCNL36825T_REG_PS_THDL, thdl) &&
+      writeWord(VCNL36825T_REG_PS_THDH, thdh) &&
       PS_INT(PS_INT_ENABLE))
     return true;
     
@@ -256,7 +259,7 @@ boolean VCNL36825TClass::PS_INT_with_threshold(uint16_t thdl, uint16_t thdh)
 
 boolean VCNL36825TClass::read_INT_FLAG(volatile uint16_t *int_flag)
 {
-  boolean status = read(VCNL36825T_REG_INT_FLAG, int_flag);
+  boolean status = readWord(VCNL36825T_REG_INT_FLAG, int_flag);
   if (status)
     *int_flag &= PS_IF_AWAY | PS_IF_CLOSE | PS_SPFLAG | PS_ACFLAG;
   return status;
@@ -273,7 +276,7 @@ boolean VCNL36825TClass::set_PS_I_VCSEL(PS_I_VCSEL_t i_vcsel)
 VCNL36825TClass::PS_I_VCSEL_t VCNL36825TClass::get_PS_I_VCSEL(void)
 {
   uint16_t conf3; 
-  read(VCNL36825T_REG_PS_CONF3, &conf3);
+  readWord(VCNL36825T_REG_PS_CONF3, &conf3);
   return (PS_I_VCSEL_t)(
     (conf3 & VCNL36825T_PS_I_VCSEL_MASK) >> VCNL36825T_PS_I_VCSEL_SHIFT);
 }
@@ -282,40 +285,40 @@ boolean VCNL36825TClass::read_PS_with_AC(uint16_t *ps, uint16_t *ps_ac)
 {
   uint16_t ps_conf3, ps_conf4;
 
-  if(!read(VCNL36825T_REG_PS_CONF3, &ps_conf3) ||
-     !read(VCNL36825T_REG_PS_CONF4, &ps_conf4))
+  if(!readWord(VCNL36825T_REG_PS_CONF3, &ps_conf3) ||
+     !readWord(VCNL36825T_REG_PS_CONF4, &ps_conf4))
     return false;
 
   // Enable PS_AF
   uint16_t conf3 = ps_conf3;
   conf3 &= ~(VCNL36825T_PS_AF | VCNL36825T_PS_TRIG);
   conf3 |= VCNL36825T_PS_AF;
-  if(!write(VCNL36825T_REG_PS_CONF3, conf3))
+  if(!writeWord(VCNL36825T_REG_PS_CONF3, conf3))
     return false;
 
   // Enable PS_AC
   uint16_t conf4 = ps_conf4;
   conf4 &= ~(VCNL36825T_PS_AC_NUM_MASK | VCNL36825T_PS_AC_PERIOD_MASK | VCNL36825T_PS_AC | VCNL36825T_PS_AC_TRIG);
   conf4 |= VCNL36825T_PS_AC_NUM_8 | VCNL36825T_PS_AC_PERIOD_24ms | VCNL36825T_PS_AC;
-  if(!write(VCNL36825T_REG_PS_CONF4, conf4) ||
-     !write(VCNL36825T_REG_PS_CONF4, conf4 | VCNL36825T_PS_AC_TRIG))
+  if(!writeWord(VCNL36825T_REG_PS_CONF4, conf4) ||
+     !writeWord(VCNL36825T_REG_PS_CONF4, conf4 | VCNL36825T_PS_AC_TRIG))
     return false;
   do {
-    if(!read(VCNL36825T_REG_PS_AC_DATA, ps_ac))
+    if(!readWord(VCNL36825T_REG_PS_AC_DATA, ps_ac))
       return false;
     if (*ps_ac & PS_AC_DATA_AC_SUN)
       Serial.println("PS_AC_SUN");
   } while (*ps_ac & PS_AC_DATA_AC_BUSY);
   *ps_ac &= 0x0FFF;     // 12-bit
 
-  if(!write(VCNL36825T_REG_PS_CONF3, conf3 | VCNL36825T_PS_TRIG))
+  if(!writeWord(VCNL36825T_REG_PS_CONF3, conf3 | VCNL36825T_PS_TRIG))
     return false;
   _delay_us(9600);  // 50us x 8T x 8P x 2 x 1.5 = 9600us
-  read(VCNL36825T_REG_PS_DATA, ps);
+  readWord(VCNL36825T_REG_PS_DATA, ps);
 
   // Restore PS_CONF3 and PS_CONF4
-  if(!write(VCNL36825T_REG_PS_CONF4, ps_conf4) ||
-     !write(VCNL36825T_REG_PS_CONF3, ps_conf3))
+  if(!writeWord(VCNL36825T_REG_PS_CONF4, ps_conf4) ||
+     !writeWord(VCNL36825T_REG_PS_CONF3, ps_conf3))
     return false;
 
   return true;
