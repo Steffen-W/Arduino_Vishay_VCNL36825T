@@ -150,11 +150,11 @@ int VCNL36825TClass::begin(void)
   // Power On sequences
   if (// (1). PS_ST = 1
       !writeWord(VCNL36825T_REG_PS_CONF1, 0x0201) ||
-      !writeWord(VCNL36825T_REG_PS_CONF3, VCNL36825T_PS_ST) ||
+      !writeWord(VCNL36825T_REG_PS_CONF2, VCNL36825T_PS_ST) ||
       // (2). PS_ON = 1, PS_CAL = 1
       !writeWord(VCNL36825T_REG_PS_CONF1, 0x0201 | VCNL36825T_PS_ON | VCNL36825T_PS_CAL) ||
       // (3). PS_ST = 0
-      !writeWord(VCNL36825T_REG_PS_CONF3, 0x0000))
+      !writeWord(VCNL36825T_REG_PS_CONF2, 0x0000))
     return 0;
 
   // Initialization
