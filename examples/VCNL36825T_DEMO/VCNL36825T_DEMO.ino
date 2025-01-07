@@ -44,7 +44,7 @@ void loop()
   if (vcnl36825t.read_PS_with_AC(&ps, &ps_ac))
   {
     Serial.printf("0x%04X \t %i\n", ps, ps);
-    Serial.printf("%0.3fmm \n", SensorToFloat(ps));
+    Serial.printf("%0.3fmm \n", vcnl36825t.SensorToFloat(ps));
   }
 
   delay(100);
