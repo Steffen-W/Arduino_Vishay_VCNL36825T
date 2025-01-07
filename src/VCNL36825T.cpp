@@ -136,7 +136,6 @@ VCNL36825TClass::~VCNL36825TClass(void)
 
 int VCNL36825TClass::begin(void)
 {
-  _wire->begin();
   slaveAddress = VCNL36825T_ADDRESS;
 
   // Prevent I2C bus lockup

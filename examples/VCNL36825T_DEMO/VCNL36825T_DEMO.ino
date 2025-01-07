@@ -25,6 +25,7 @@ void setup()
   while (!Serial);
   Serial.println();
 
+  Wire.begin();
   if (!vcnl36825t.begin())
   {
     Serial.println("Failed to initialize vcnl36825t");
