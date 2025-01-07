@@ -313,7 +313,7 @@ boolean VCNL36825TClass::read_PS_with_AC(uint16_t *ps, uint16_t *ps_ac)
 
   if(!writeWord(VCNL36825T_REG_PS_CONF3, conf3 | VCNL36825T_PS_TRIG))
     return false;
-  _delay_us(9600);  // 50us x 8T x 8P x 2 x 1.5 = 9600us
+  delayMicroseconds(9600); // 50us x 8T x 8P x 2 x 1.5 = 9600us
   readWord(VCNL36825T_REG_PS_DATA, ps);
 
   // Restore PS_CONF3 and PS_CONF4
@@ -322,6 +322,16 @@ boolean VCNL36825TClass::read_PS_with_AC(uint16_t *ps, uint16_t *ps_ac)
     return false;
 
   return true;
+}
+
+// https://www.vishay.com/docs/80274/designingvcnl36825t.pdf
+// Fig Proximity Value vs. Distance
+// (x1, y1) and (x2, y2) are points read from the figure
+float VCNL36825TClass::SensorToFloat(uint16_t sensorData, float x1, float y1, float x2, float y2)
+{
+  const float exp_b = log(x2 / x1) / log(y2 / y1);
+  const float a_factor = x1 / pow(y1, exp_b);
+  return a_factor * pow(sensorData * 1.0, exp_b);
 }
 
 VCNL36825TClass vcnl36825t(Wire);

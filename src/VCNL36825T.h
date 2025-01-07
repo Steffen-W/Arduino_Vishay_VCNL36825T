@@ -54,7 +54,8 @@ class VCNL36825TClass {
     boolean set_PS_I_VCSEL(PS_I_VCSEL_t i_vcsel);
     PS_I_VCSEL_t get_PS_I_VCSEL(void);
     boolean read_PS_with_AC(uint16_t *ps, uint16_t *ps_ac);
-      
+    float SensorToFloat(uint16_t sensorData, float x1 = 20.0, float y1 = 1000.0, float x2 = 100.0, float y2 = 50.0);
+
   private:
     TwoWire* _wire;
     uint8_t slaveAddress;
